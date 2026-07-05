@@ -3,7 +3,8 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import { SiAmeba, SiAssemblyscript } from "react-icons/si";
-// import addcart from "../schema/addcart.js";
+import addcart from "../schema/addcart.js";
+import Order from "../schema/order.js";
 
 
 
@@ -120,21 +121,50 @@ export const singleusercontrol = async (req, res) => {
 };
 // product
 export const addcartcontrol = async (req, res) => {
+  try {
+    console.log("BODY:", req.body);
 
-  const { email, productid, name, price, image } = req.body;
+    const data = await addcart.create(req.body);
 
-  const data = await addcart.create({
-    email,
-    productid,
-    name,
-    price,
-    image,
-    quantity: 1
-  });
+    console.log("Saved:", data);
+    console.log("Collection:", addcart.collection.name);
+
+    res.status(200).json({
+      msg: "Product Added",
+      cart: data
+    });
+
+  } catch (err) {
+    console.log("ERROR:", err);
+    res.status(500).json({
+      error: err.message
+    });
+  }
+};
+export const getcartcontrol = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const data = await addcart.find({ email });
+
+    res.status(200).json({
+      cart: data
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+};
+
+export const placeordercontrol = async (req, res) => {
+
+  const data = await Order.create(req.body);
 
   res.status(200).json({
-    msg: "Product Added To Cart",
-    cart: data
+    msg: "Order Placed Successfully",
+    order: data
   });
 
 };

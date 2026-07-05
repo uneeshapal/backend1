@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import { configDotenv } from "dotenv";
+
 configDotenv();
-const db = process.env.ATLASURL;
 
-const abc = mongoose.connect(db).then(() => {
-    console.log("connected to db");
+mongoose.connect(process.env.ATLASURL)
+.then(() => {
+    console.log("Connected");
+    console.log("Database Name:", mongoose.connection.name);
+    console.log("Host:", mongoose.connection.host);
 });
-
-export default abc; 

@@ -9,7 +9,9 @@ import {
   registercontrol,
   logincontrol,
   singleusercontrol,
-  addcartcontrol
+  addcartcontrol,
+  getcartcontrol,
+  placeordercontrol
 } from "../appcontroller/control.js";
 
 const app = express.Router();
@@ -27,5 +29,7 @@ app.post("/register", registercontrol);
 app.post("/login", logincontrol);
 app.post("/profile",singleusercontrol);
 app.post("/addcart", addcartcontrol);
+app.post("/getcart", getcartcontrol);
+app.post("/placeorder", placeordercontrol);
 
 export default app;

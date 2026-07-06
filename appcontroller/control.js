@@ -2,7 +2,7 @@ import user from "../schema/schema.js"
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { SiAmeba, SiAssemblyscript } from "react-icons/si";
+
 import addcart from "../schema/addcart.js";
 import Order from "../schema/order.js";
 

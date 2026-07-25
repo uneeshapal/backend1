@@ -168,3 +168,37 @@ export const placeordercontrol = async (req, res) => {
   });
 
 };
+
+export const removecartcontrol = async (req, res) => {
+  try {
+    await addcart.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      msg: "Item Removed"
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+};
+
+export const updatecartcontrol = async (req, res) => {
+  try {
+    const { quantity } = req.body;
+
+    const data = await addcart.findByIdAndUpdate(
+      req.params.id,
+      { quantity },
+      { new: true }
+    );
+
+    res.status(200).json({
+      cart: data
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+};

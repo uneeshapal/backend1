@@ -11,7 +11,9 @@ import {
   singleusercontrol,
   addcartcontrol,
   getcartcontrol,
-  placeordercontrol
+  placeordercontrol,
+  removecartcontrol,
+  updatecartcontrol
 } from "../appcontroller/control.js";
 
 const app = express.Router();
@@ -30,6 +32,9 @@ app.post("/login", logincontrol);
 app.post("/profile",singleusercontrol);
 app.post("/addcart", addcartcontrol);
 app.post("/getcart", getcartcontrol);
+app.delete("/cart/:id", removecartcontrol);
+
+app.put("/cart/:id", updatecartcontrol);
 app.post("/placeorder", placeordercontrol);
 
 export default app;

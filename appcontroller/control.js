@@ -5,7 +5,8 @@ import cookieParser from 'cookie-parser';
 
 import addcart from "../schema/addcart.js";
 import Order from "../schema/order.js";
-
+import Product from "../schema/adminproduct.js";
+import Admin from "../schema/admin.js";
 
 
 export const webRouter = (req, res) => {
@@ -199,6 +200,305 @@ export const updatecartcontrol = async (req, res) => {
   } catch (err) {
     res.status(500).json({
       error: err.message
+    });
+  }
+};
+
+// admin product control functions
+
+// Add Product
+export const addProduct = async (req, res) => {
+  try {
+    console.log("PRODUCT BODY:", req.body);
+
+    const { adminId } = req.body;
+
+    // Admin ID check
+    if (!adminId) {
+      return res.status(400).json({
+        success: false,
+        message: "Admin ID is required",
+      });
+    }
+
+    // Check admin exists
+    const adminData = await Admin.findById(adminId);
+
+    if (!adminData) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    // Create product
+    const product = await Product.create({
+      name: req.body.name,
+      price: req.body.price,
+      oldPrice: req.body.oldPrice || 0,
+      discount: req.body.discount || "0%",
+      category: req.body.category,
+      stock: req.body.stock,
+      description: req.body.description,
+      image: req.body.image,
+
+      showOnHome: false,
+      bestSelling: false,
+
+      // IMPORTANT
+      createdBy: adminId,
+    });
+
+    // Admin ke added count ko +1 karo
+    await Admin.findByIdAndUpdate(adminId, {
+      $inc: {
+        productsAdded: 1,
+      },
+    });
+
+    console.log("PRODUCT SAVED:", product);
+
+    res.status(201).json({
+      success: true,
+      message: "Product Added Successfully",
+      product,
+    });
+
+  } catch (error) {
+    console.log("ADD PRODUCT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get All Products
+export const getProducts = async (req, res) => {
+  try {
+    const products = await Product.find();
+
+    res.status(200).json({
+      success: true,
+      products,
+    });
+
+  } catch (error) {
+    console.log("GET PRODUCT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Delete Product
+export const deleteProduct = async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Product Deleted Successfully",
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Update Product
+export const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const adminDashboard = async (req, res) => {
+  try {
+    const totalProducts = await Product.countDocuments();
+    const totalUsers = await user.countDocuments();
+    const totalOrders = await Order.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      totalProducts,
+      totalUsers,
+      totalOrders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+export const getBestSellingProducts = async (req, res) => {
+   try {
+      const products = await Product.find({
+         bestSelling: true
+      });
+
+      res.status(200).json({
+         success: true,
+         products
+      });
+
+   } catch(err){
+      res.status(500).json({
+         success:false,
+         message:err.message
+      });
+   }
+}
+
+
+
+// admin login control
+// admin login control
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const adminData = await Admin.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!adminData) {
+      return res.status(401).json({
+        success: false,
+        message: "Seller not found",
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      adminData.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+
+    const token = jwt.sign(
+  {
+    id: adminData._id,
+    email: adminData.email,
+    role: "admin",
+  },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: "1h",
+  }
+);
+    res.cookie("adminToken", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Seller Login Successful",
+      token,
+      admin: {
+        id: adminData._id,
+        name: adminData.name,
+        email: adminData.email,
+        role: adminData.role,
+      },
+    });
+
+  } catch (error) {
+    console.log("ADMIN LOGIN ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// admin register
+export const adminRegister = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const existingAdmin = await Admin.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: "Seller already exists",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newAdmin = await Admin.create({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role: "admin",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Seller registered successfully",
+      admin: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        role: newAdmin.role,
+      },
+    });
+  } catch (error) {
+    console.log("ADMIN REGISTER ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };
